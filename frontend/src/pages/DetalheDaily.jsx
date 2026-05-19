@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { buscarDaily } from '../services/api.js'
 import AtaViewer from '../components/AtaViewer.jsx'
-import styles from './DetalheDaily.module.css'
 
 export default function DetalheDaily() {
   const { id } = useParams()
@@ -14,17 +13,24 @@ export default function DetalheDaily() {
     buscarDaily(id).then(setDaily).catch(() => navigate('/historico')).finally(() => setCarregando(false))
   }, [id])
 
-  if (carregando) return <div className={styles.page}><div className={styles.loading}><div className={styles.spinner} /></div></div>
+  if (carregando) return (
+    <div className="flex justify-center pt-20">
+      <div className="w-6 h-6 border-2 border-[#e0ddd9] border-t-[#d4457a] rounded-full" style={{ animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+
   if (!daily) return null
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <Link to="/historico" className={styles.voltar}>← Histórico</Link>
-        <div>
-          <h1 className={styles.title}>Daily — {daily.data}</h1>
-          <p className={styles.subtitle}>Registrada às {new Date(daily.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-        </div>
+    <div className="p-10">
+      <div className="mb-7 pb-6 border-b border-[#e0ddd9]">
+        <Link to="/historico" className="text-xs text-[#a09890] hover:text-[#d4457a] font-medium transition-colors inline-flex items-center gap-1 mb-3">
+          ← Histórico
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight">Daily — {daily.data}</h1>
+        <p className="text-xs text-[#a09890] font-mono mt-1">
+          Registrada às {new Date(daily.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+        </p>
       </div>
       <AtaViewer ata={daily.ata} dailyId={daily.id} />
     </div>
