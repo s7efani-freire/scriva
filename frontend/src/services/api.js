@@ -2,18 +2,23 @@ import axios from 'axios'
 
 const api = axios.create({ baseURL: '/api' })
 
-export async function processarAudio(audioBlob, onProgress) {
+export async function processarAudio(audioBlob, tipo = 'daily', onProgress) {
   const formData = new FormData()
-  formData.append('audio', audioBlob, 'daily.webm')
+  formData.append('audio', audioBlob, 'reuniao.webm')
+  formData.append('tipo', tipo)
+
   const { data } = await api.post('/processar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    onUploadProgress: (e) => { if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100)) }
+    onUploadProgress: (e) => {
+      if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100))
+    }
   })
   return data
 }
 
-export async function buscarHistorico() {
-  const { data } = await api.get('/historico')
+export async function buscarHistorico(tipo) {
+  const params = tipo ? `?tipo=${tipo}` : ''
+  const { data } = await api.get(`/historico${params}`)
   return data
 }
 
