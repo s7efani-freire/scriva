@@ -3,3 +3,6 @@ node_modules/
 *.db
 dist/
 .DS_Store
+package-lock.json
+scriva.db-shm
+scriva.db-wal
