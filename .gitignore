@@ -6,3 +6,6 @@ dist/
 package-lock.json
 scriva.db-shm
 scriva.db-wal
+package-lock.json
+scriva.db-shm
+scriva.db-wal
