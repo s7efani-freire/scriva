@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useBlocker } from 'react-router-dom'
 import { atualizarAta } from '../services/api.js'
 import styles from './AtaViewer.module.css'
 
@@ -6,17 +7,41 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
   const [ata, setAta] = useState(ataInicial)
   const [salvando, setSalvando] = useState(false)
   const [salvo, setSalvo] = useState(false)
+  const [alterado, setAlterado] = useState(false)
+
+  // Bloqueia navegação se tiver alterações não salvas
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      alterado && currentLocation.pathname !== nextLocation.pathname
+  )
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const ok = window.confirm('Você tem alterações não salvas. Deseja descartar e continuar?')
+      if (ok) blocker.proceed()
+      else blocker.reset()
+    }
+  }, [blocker.state])
+
+  function marcarAlterado() { setAlterado(true); setSalvo(false) }
 
   function atualizarPessoa(index, campo, valor) {
     setAta({ ...ata, pessoas: ata.pessoas.map((p, i) => i === index ? { ...p, [campo]: valor } : p) })
-    setSalvo(false)
+    marcarAlterado()
   }
   function atualizarDecisao(index, valor) {
     setAta({ ...ata, decisoes: ata.decisoes.map((d, i) => i === index ? valor : d) })
-    setSalvo(false)
+    marcarAlterado()
   }
   function atualizarAcao(index, campo, valor) {
     setAta({ ...ata, acoes: ata.acoes.map((a, i) => i === index ? { ...a, [campo]: valor } : a) })
+    marcarAlterado()
+  }
+
+  function descartar() {
+    if (!window.confirm('Descartar todas as alterações feitas?')) return
+    setAta(ataInicial)
+    setAlterado(false)
     setSalvo(false)
   }
 
@@ -26,6 +51,7 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
       setSalvando(true)
       await atualizarAta(dailyId, ata)
       setSalvo(true)
+      setAlterado(false)
     } catch (err) {
       console.error(err)
     } finally {
@@ -128,7 +154,7 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
         </div>
       )}
 
-      {/* Bloqueios (alinhamento) */}
+      {/* Bloqueios */}
       {ata.bloqueios?.length > 0 && (
         <div className={styles.secao}>
           <h3 className={styles.secaoTitulo}>Bloqueios</h3>
@@ -188,7 +214,12 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
       {!readOnly && dailyId && (
         <div className={styles.salvarArea}>
           {salvo && <span className={styles.salvoMsg}>✓ Alterações salvas</span>}
-          <button className={styles.btnSalvar} onClick={salvar} disabled={salvando}>
+          {alterado && (
+            <button className={styles.btnDescartar} onClick={descartar}>
+              Descartar
+            </button>
+          )}
+          <button className={styles.btnSalvar} onClick={salvar} disabled={salvando || !alterado}>
             {salvando ? 'Salvando...' : 'Salvar alterações'}
           </button>
         </div>
