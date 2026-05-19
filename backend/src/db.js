@@ -25,9 +25,15 @@ export function initDb() {
       transcricao TEXT NOT NULL,
       ata TEXT NOT NULL,
       participantes TEXT,
+      tipo TEXT DEFAULT 'daily',
       criado_em TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `)
+
+  // Migração: adiciona coluna tipo se não existir
+  try {
+    db.exec(`ALTER TABLE dailys ADD COLUMN tipo TEXT DEFAULT 'daily'`)
+  } catch {}
 
   console.log('✅ Banco de dados pronto')
 }

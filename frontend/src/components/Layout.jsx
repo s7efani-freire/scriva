@@ -1,32 +1,72 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import styles from './Layout.module.css'
 
+const TIPOS = [
+  { slug: 'daily', label: 'Daily', icon: '◷', desc: 'Standup diário' },
+  { slug: 'projeto', label: 'Reunião de Projeto', icon: '◈', desc: 'Projeto específico' },
+  { slug: 'alinhamento', label: 'Alinhamento', icon: '◎', desc: 'Múltiplos projetos' },
+  { slug: 'geral', label: 'Reunião Geral', icon: '◇', desc: 'Reunião avulsa' },
+]
+
 export default function Layout({ children }) {
+  const location = useLocation()
+
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
-          <span className={styles.logoMark}>◈</span>
+          <span className={styles.logoMark}>S</span>
           <span className={styles.logoText}>scriva</span>
         </div>
-        <nav className={styles.nav}>
-          <NavLink to="/" end className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-            </svg>
-            Nova daily
-          </NavLink>
-          <NavLink to="/historico" className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-            </svg>
-            Histórico
-          </NavLink>
-        </nav>
+
+        <div className={styles.navSection}>
+          <span className={styles.navLabel}>Nova gravação</span>
+          <nav className={styles.nav}>
+            {TIPOS.map((t) => (
+              <NavLink
+                key={t.slug}
+                to={`/?tipo=${t.slug}`}
+                className={() =>
+                  location.pathname === '/' && location.search === `?tipo=${t.slug}`
+                    ? `${styles.link} ${styles.active}`
+                    : styles.link
+                }
+              >
+                <span className={styles.linkIcon}>{t.icon}</span>
+                <span className={styles.linkInfo}>
+                  <span className={styles.linkLabel}>{t.label}</span>
+                  <span className={styles.linkDesc}>{t.desc}</span>
+                </span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        <div className={styles.navSection}>
+          <span className={styles.navLabel}>Registros</span>
+          <nav className={styles.nav}>
+            <NavLink
+              to="/historico"
+              className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}
+            >
+              <span className={styles.linkIcon}>≡</span>
+              <span className={styles.linkInfo}>
+                <span className={styles.linkLabel}>Histórico</span>
+                <span className={styles.linkDesc}>Todas as reuniões</span>
+              </span>
+            </NavLink>
+          </nav>
+        </div>
+
         <div className={styles.sidebarFooter}>
-          <span className={styles.version}>v1.0</span>
+          <div className={styles.footerBadge}>
+            <span className={styles.footerDot} />
+            <span>Groq · Whisper · LLaMA</span>
+          </div>
+          <span className={styles.version}>v1.1</span>
         </div>
       </aside>
+
       <main className={styles.main}>{children}</main>
     </div>
   )
