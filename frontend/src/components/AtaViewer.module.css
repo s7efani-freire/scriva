@@ -1,0 +1,37 @@
+.container { display: flex; flex-direction: column; gap: 20px; max-width: 860px; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 28px; }
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent2); background: var(--accent-dim); padding: 4px 10px; border-radius: 100px; }
+.data { font-family: var(--mono); font-size: 13px; color: var(--text3); }
+.resumoTexto { font-size: 16px; color: var(--text); line-height: 1.7; }
+.participantes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.tag { font-size: 13px; font-weight: 500; color: var(--text2); background: var(--bg3); border: 1px solid var(--border); padding: 4px 12px; border-radius: 100px; }
+.secao { display: flex; flex-direction: column; gap: 12px; }
+.secaoTitulo { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); }
+.pessoasGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.pessoaCard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.pessoaNome { font-size: 16px; font-weight: 700; color: var(--text); padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.pessoaCampo { display: flex; flex-direction: column; gap: 6px; }
+.campoLabel { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); }
+.bloqueio { color: var(--amber) !important; }
+.campoTexto { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.textarea { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; line-height: 1.6; padding: 10px 12px; resize: vertical; transition: border-color 0.15s; width: 100%; }
+.textarea:focus { outline: none; border-color: var(--accent); }
+.textareaRed { border-color: rgba(247, 201, 106, 0.3); }
+.textareaRed:focus { border-color: var(--amber); }
+.listaCard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.listaItem { display: flex; align-items: center; gap: 14px; padding: 14px 20px; font-size: 14px; color: var(--text2); border-bottom: 1px solid var(--border); }
+.listaItem:last-child { border-bottom: none; }
+.listaIcone { font-size: 8px; color: var(--accent2); flex-shrink: 0; }
+.inputLinha { flex: 1; background: transparent; border: none; color: var(--text); font-size: 14px; font-family: var(--font); outline: none; padding: 2px 0; }
+.inputLinha:focus { border-bottom: 1px solid var(--accent); }
+.acaoItem { display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.acaoItem:last-child { border-bottom: none; }
+.acaoResponsavel { font-size: 12px; font-weight: 600; color: var(--accent2); background: var(--accent-dim); padding: 3px 10px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+.acaoTarefa { font-size: 14px; color: var(--text2); }
+.obsTexto { padding: 16px 20px; font-size: 14px; color: var(--text2); line-height: 1.7; }
+.salvarArea { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding-top: 8px; }
+.salvoMsg { font-size: 13px; color: var(--green); font-weight: 500; }
+.btnSalvar { background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; padding: 10px 24px; border-radius: var(--radius-sm); transition: all 0.15s; }
+.btnSalvar:hover { background: var(--accent2); }
+.btnSalvar:disabled { opacity: 0.5; cursor: not-allowed; }
