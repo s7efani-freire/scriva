@@ -27,6 +27,9 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
   const attCampo = (campo, valor) => {
     setAta(prev => ({ ...prev, [campo]: valor })); marcar()
   }
+  const attArrayItem = (lista, i, valor) => {
+    setAta(prev => ({ ...prev, [lista]: prev[lista].map((item, j) => j === i ? valor : item) })); marcar()
+  }
   const attArrayObj = (lista, i, campo, valor) => {
     setAta(prev => ({ ...prev, [lista]: prev[lista].map((item, j) => j === i ? { ...item, [campo]: valor } : item) })); marcar()
   }
@@ -62,27 +65,19 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
   const discV = (ata.discussoes || []).filter(d => !isNull(d.topico) || !isNull(d.detalhes))
   const obsV = !isNull(ata.observacoes)
 
+  const iconeDown = (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  )
+
   const BotoesDownload = () => dailyId ? (
     <div className="flex gap-2">
-      <button
-        onClick={() => downloadAta(dailyId, 'md')}
-        className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all"
-        title="Baixar como Markdown"
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        .md
+      <button onClick={() => downloadAta(dailyId, 'md')} className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all" title="Baixar como Markdown">
+        {iconeDown} .md
       </button>
-      <button
-        onClick={() => downloadAta(dailyId, "pdf")}
-        className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all"
-        title="Baixar PDF"
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        PDF
+      <button onClick={() => downloadAta(dailyId, 'pdf')} className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all" title="Baixar PDF">
+        {iconeDown} PDF
       </button>
     </div>
   ) : null
@@ -92,32 +87,33 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
 
       <div className="bg-bg-card border border-brd rounded-2xl p-4 md:p-8 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
-            Resumo
-          </span>
+          <span className="text-xs font-bold uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">Resumo</span>
           <div className="flex items-center gap-3">
             <BotoesDownload />
-            {ata.data && <span className="font-mono text-xs text-tx-ter">{ata.data}</span>}
+            {ata.data && <span className="font-mono text-xs text-tx-ter">{ata.data}{ata.hora ? ` · ${ata.hora}` : ''}</span>}
           </div>
         </div>
 
         {readOnly ? (
           <p className="text-base md:text-lg text-tx-main leading-relaxed break-words">{noNull(ata.resumo)}</p>
         ) : (
-          <textarea
-            className="w-full bg-bg-page border border-brd rounded-xl text-tx-main text-base md:text-lg leading-relaxed px-4 py-3 md:px-5 md:py-4 resize-y outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 font-sans transition-all min-h-[140px]"
-            value={noNull(ata.resumo)}
-            onChange={(e) => attCampo('resumo', e.target.value)}
-            rows={5}
-          />
+          <textarea className="w-full bg-bg-page border border-brd rounded-xl text-tx-main text-base md:text-lg leading-relaxed px-4 py-3 md:px-5 md:py-4 resize-y outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 font-sans transition-all min-h-[140px]" value={noNull(ata.resumo)} onChange={(e) => attCampo('resumo', e.target.value)} rows={5} />
         )}
 
         {ata.participantes?.length > 0 && !isNull(ata.participantes[0]) && (
           <div className="flex flex-wrap gap-2 mt-4 md:mt-6">
             {ata.participantes.map((p, i) => !isNull(p) && (
-              <span key={i} className="text-xs md:text-sm font-medium text-tx-sec bg-bg-page border border-brd px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-sm">
-                {p}
-              </span>
+              readOnly ? (
+                <span key={i} className="text-xs md:text-sm font-medium text-tx-sec bg-bg-page border border-brd px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-sm">{p}</span>
+              ) : (
+                <input
+                  key={i}
+                  className="text-xs md:text-sm font-medium text-tx-sec bg-bg-page border border-brd hover:border-accent/40 focus:border-accent outline-none px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-sm transition-all min-w-[60px]"
+                  style={{ width: `${Math.max(60, (p.length + 2) * 8)}px` }}
+                  value={p}
+                  onChange={e => attArrayItem('participantes', i, e.target.value)}
+                />
+              )
             ))}
           </div>
         )}
@@ -134,7 +130,7 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
                   {readOnly ? (
                     <span className="break-words w-full">{noNull(pessoa.nome)}</span>
                   ) : (
-                    <input className="bg-transparent border-none outline-none font-bold text-base md:text-lg w-full text-tx-main" value={noNull(pessoa.nome)} onChange={e => attArrayObj('pessoas', i, 'nome', e.target.value)} placeholder="Nome" />
+                    <input className="bg-transparent border-none outline-none font-bold text-base md:text-lg w-full text-tx-main border-b border-transparent focus:border-accent transition-colors" value={noNull(pessoa.nome)} onChange={e => attArrayObj('pessoas', i, 'nome', e.target.value)} placeholder="Nome" />
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -183,12 +179,7 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
             {readOnly ? (
               <p className="text-sm md:text-base text-tx-main leading-relaxed break-words">{noNull(ata.observacoes)}</p>
             ) : (
-              <textarea
-                className="w-full bg-transparent border-none text-tx-main text-sm md:text-base leading-relaxed outline-none font-sans min-h-[80px]"
-                value={noNull(ata.observacoes)}
-                onChange={(e) => attCampo('observacoes', e.target.value)}
-                rows={3}
-              />
+              <textarea className="w-full bg-transparent border-none text-tx-main text-sm md:text-base leading-relaxed outline-none font-sans min-h-[80px]" value={noNull(ata.observacoes)} onChange={(e) => attCampo('observacoes', e.target.value)} rows={3} />
             )}
           </div>
         </div>
@@ -203,19 +194,11 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
                 Descartar
               </button>
             )}
-            <button
-              onClick={salvar}
-              disabled={salvando || !alterado}
-              className={`text-sm md:text-base font-semibold py-2.5 px-6 rounded-xl transition-all shadow-sm flex-1 sm:flex-none text-center ${alterado ? 'bg-accent hover:bg-accent-hover text-white shadow-md' : 'bg-brd text-tx-ter cursor-not-allowed'}`}
-            >
+            <button onClick={salvar} disabled={salvando || !alterado} className={`text-sm md:text-base font-semibold py-2.5 px-6 rounded-xl transition-all shadow-sm flex-1 sm:flex-none text-center ${alterado ? 'bg-accent hover:bg-accent-hover text-white shadow-md' : 'bg-brd text-tx-ter cursor-not-allowed'}`}>
               {salvando ? 'Salvando...' : 'Salvar alterações'}
             </button>
             {onFechar && (
-              <button
-                type="button"
-                onClick={fechar}
-                className="bg-tx-main hover:bg-black text-white text-sm md:text-base font-semibold py-2.5 px-5 rounded-xl transition-all shadow-sm flex-1 sm:flex-none text-center whitespace-nowrap"
-              >
+              <button type="button" onClick={fechar} className="bg-tx-main hover:bg-black text-white text-sm md:text-base font-semibold py-2.5 px-5 rounded-xl transition-all shadow-sm flex-1 sm:flex-none text-center whitespace-nowrap">
                 Fechar
               </button>
             )}
