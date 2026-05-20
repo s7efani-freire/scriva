@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 export function useGravacao() {
-  const [estado, setEstado] = useState('idle') // idle | gravando | pausado | processando | pronto | erro
+  const [estado, setEstado] = useState('idle') 
   const [tempoGravacao, setTempoGravacao] = useState(0)
   const [erro, setErro] = useState(null)
-  const [volume, setVolume] = useState(0) // 0-100 para visualização das ondas
+  const [volume, setVolume] = useState(0) 
 
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
@@ -13,7 +13,7 @@ export function useGravacao() {
   const animFrameRef = useRef(null)
   const streamRef = useRef(null)
 
-  // Limpeza ao desmontar
+  
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current)
