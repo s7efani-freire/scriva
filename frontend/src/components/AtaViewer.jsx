@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useBlocker } from 'react-router-dom'
-import { atualizarAta } from '../services/api.js'
+import { atualizarAta, downloadAta } from '../services/api.js'
 
 export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, onFechar }) {
   const [ata, setAta] = useState(ataInicial)
@@ -62,6 +62,31 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
   const discV = (ata.discussoes || []).filter(d => !isNull(d.topico) || !isNull(d.detalhes))
   const obsV = !isNull(ata.observacoes)
 
+  const BotoesDownload = () => dailyId ? (
+    <div className="flex gap-2">
+      <button
+        onClick={() => downloadAta(dailyId, 'md')}
+        className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all"
+        title="Baixar como Markdown"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        .md
+      </button>
+      <button
+        onClick={() => downloadAta(dailyId, "pdf")}
+        className="flex items-center gap-1.5 text-xs font-semibold text-tx-sec bg-bg-page border border-brd hover:border-accent/40 hover:text-accent px-3 py-1.5 rounded-lg transition-all"
+        title="Baixar PDF"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        PDF
+      </button>
+    </div>
+  ) : null
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 pb-24">
 
@@ -70,7 +95,10 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
           <span className="text-xs font-bold uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
             Resumo
           </span>
-          {ata.data && <span className="font-mono text-xs text-tx-ter">{ata.data}</span>}
+          <div className="flex items-center gap-3">
+            <BotoesDownload />
+            {ata.data && <span className="font-mono text-xs text-tx-ter">{ata.data}</span>}
+          </div>
         </div>
 
         {readOnly ? (
@@ -109,13 +137,11 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
                     <input className="bg-transparent border-none outline-none font-bold text-base md:text-lg w-full text-tx-main" value={noNull(pessoa.nome)} onChange={e => attArrayObj('pessoas', i, 'nome', e.target.value)} placeholder="Nome" />
                   )}
                 </div>
-
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold uppercase tracking-wide text-tx-ter">✓ Feito</label>
                   {readOnly ? <p className="text-sm md:text-base text-tx-sec leading-relaxed break-words">{noNull(pessoa.feito) || '—'}</p> :
                     <textarea className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-sm md:text-base leading-relaxed px-3 py-2 resize-y outline-none focus:border-accent/50 font-sans" value={noNull(pessoa.feito)} onChange={(e) => attArrayObj('pessoas', i, 'feito', e.target.value)} rows={3} />}
                 </div>
-
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold uppercase tracking-wide text-tx-ter">→ Vai fazer</label>
                   {readOnly ? <p className="text-sm md:text-base text-tx-sec leading-relaxed break-words">{noNull(pessoa.farA) || '—'}</p> :
@@ -171,14 +197,12 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
       {!readOnly && dailyId && (
         <div className="fixed md:sticky bottom-0 left-0 right-0 md:bottom-6 bg-bg-page/90 backdrop-blur-md p-4 md:p-0 border-t md:border-t-0 border-brd flex flex-col sm:flex-row items-center justify-end gap-3 z-30">
           {salvo && <span className="text-sm text-[#3a7a52] font-semibold bg-white/80 md:bg-transparent px-3 py-1 rounded-md border md:border-0 border-brd">✓ Alterações salvas</span>}
-
           <div className="flex gap-2 w-full sm:w-auto">
             {alterado && (
               <button onClick={descartar} className="bg-white border border-[#cec9c5] text-tx-sec hover:bg-bg-page text-sm md:text-base font-semibold py-2.5 px-5 rounded-xl transition-colors shadow-sm flex-1 sm:flex-none text-center">
                 Descartar
               </button>
             )}
-
             <button
               onClick={salvar}
               disabled={salvando || !alterado}
@@ -186,7 +210,6 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false, 
             >
               {salvando ? 'Salvando...' : 'Salvar alterações'}
             </button>
-
             {onFechar && (
               <button
                 type="button"
