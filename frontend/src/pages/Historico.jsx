@@ -23,57 +23,74 @@ export default function Historico() {
 
   if (carregando) return (
     <div className="flex justify-center pt-20">
-      <div className="w-6 h-6 border-2 border-[#e0ddd9] border-t-[#d4457a] rounded-full" style={{ animation: 'spin 0.8s linear infinite' }} />
+      <div className="w-7 h-7 border-2 border-brd border-t-accent rounded-full animate-spin" />
     </div>
   )
 
   return (
-    <div className="p-10">
-      <div className="flex items-end justify-between mb-7 pb-6 border-b border-[#e0ddd9]">
+    <div className="p-6 md:p-10 max-w-7xl mx-auto">
+      <div className="flex items-end justify-between mb-8 pb-6 border-b border-brd">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Histórico</h1>
-          <p className="text-sm text-[#a09890] mt-1">{dailys.length} reunião{dailys.length !== 1 ? 'ões' : ''} registrada{dailys.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-tx-main md:text-4xl">Histórico</h1>
+          <p className="text-base text-tx-ter mt-1.5 font-medium">
+            {dailys.length === 1 ? '1 reunião registrada' : `${dailys.length} reuniões registradas`}
+          </p>
         </div>
       </div>
 
       {dailys.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-20 text-[#a09890]">
-          <p className="text-sm">Nenhuma reunião registrada ainda.</p>
-          <Link to="/" className="text-sm text-[#d4457a] font-medium hover:opacity-70 transition-opacity">Gravar primeira reunião →</Link>
+        <div className="flex flex-col items-center gap-3 py-20 text-tx-ter">
+          <p className="text-base">Nenhuma reunião registrada ainda.</p>
+          <Link to="/" className="text-base text-accent font-semibold hover:opacity-70 transition-opacity">
+            Gravar primeira reunião →
+          </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        /* Grid responsivo com excelente tamanho de visualização */
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {dailys.map((d) => (
-            <Link to={`/historico/${d.id}`} key={d.id} className="flex items-start justify-between gap-4 bg-white border border-[#e0ddd9] rounded-xl px-5 py-4 shadow-sm hover:border-pink-200 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
-              <div className="flex-1 flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-[#d4457a] font-medium">{d.data}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-[#a09890] bg-[#eeeceb] border border-[#e0ddd9] px-2 py-0.5 rounded-full">{TIPO_LABELS[d.tipo] || d.tipo}</span>
+            <Link
+              to={`/historico/${d.id}`}
+              key={d.id}
+              className="flex flex-col gap-4 bg-bg-card border border-brd rounded-2xl p-6 shadow-sm hover:border-accent/40 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm text-accent font-semibold">{d.data}</span>
+                  <span className="text-xs font-bold uppercase tracking-wide text-tx-ter bg-bg-page border border-brd px-2.5 py-0.5 rounded-full">
+                    {TIPO_LABELS[d.tipo] || d.tipo}
+                  </span>
                 </div>
-                <p className="text-sm text-[#6b6560] leading-relaxed line-clamp-2">{d.resumo || 'Sem resumo'}</p>
-                {d.participantes && (
-                  <div className="flex flex-wrap gap-1 mt-0.5">
-                    {d.participantes.split(', ').map((p, i) => (
-                      <span key={i} className="text-[10px] text-[#a09890] bg-[#f5f4f2] border border-[#e0ddd9] px-2 py-0.5 rounded-full">{p}</span>
-                    ))}
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs md:text-sm text-tx-ter">
+                    {new Date(d.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <button
+                    onClick={(e) => handleDeletar(d.id, e)}
+                    className="text-tx-ter hover:text-error p-1 rounded transition-colors"
+                    title="Deletar"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                <span className="font-mono text-xs text-[#a09890]">
-                  {new Date(d.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <button
-                  onClick={(e) => handleDeletar(d.id, e)}
-                  className="text-[#a09890] hover:text-[#c94040] p-1 rounded transition-colors"
-                  title="Deletar"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                  </svg>
-                </button>
-              </div>
+
+              <p className="text-sm md:text-base text-tx-sec leading-relaxed line-clamp-3">
+                {d.resumo || 'Sem resumo'}
+              </p>
+
+              {d.participantes && d.participantes !== 'null' && (
+                <div className="flex flex-wrap gap-1.5 mt-auto pt-2">
+                  {d.participantes.split(', ').map((p, i) => (
+                    <span key={i} className="text-xs text-tx-ter bg-bg-page border border-brd px-3 py-1 rounded-full shadow-inner">
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              )}
             </Link>
           ))}
         </div>
