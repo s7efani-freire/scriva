@@ -6,12 +6,9 @@ export async function processarAudio(audioBlob, tipo = 'daily', onProgress) {
   const formData = new FormData()
   formData.append('audio', audioBlob, 'reuniao.webm')
   formData.append('tipo', tipo)
-
   const { data } = await api.post('/processar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    onUploadProgress: (e) => {
-      if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100))
-    }
+    onUploadProgress: (e) => { if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100)) }
   })
   return data
 }
@@ -35,4 +32,8 @@ export async function atualizarAta(id, ata) {
 export async function deletarDaily(id) {
   const { data } = await api.delete(`/historico/${id}`)
   return data
+}
+
+export function downloadAta(id, formato) {
+  window.open(`/api/historico/${id}/download/${formato}`, '_blank')
 }
