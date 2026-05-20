@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { height: 100%; }
+@theme {
+  /* Definição de fontes */
+  --font-sans: "Plus Jakarta Sans", sans-serif;
 
-body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background: #f5f4f2;
-  color: #18150f;
-  -webkit-font-smoothing: antialiased;
-  font-size: 14px;
-  line-height: 1.5;
+  /* Paleta de cores oficial do Scriva */
+  --color-bg-page: #f5f4f2;
+  --color-bg-card: #ffffff;
+  --color-tx-main: #18150f;
+  --color-tx-sec: #6b6560;
+  --color-tx-ter: #a09890;
+  --color-brd: #e0ddd9;
+  --color-accent: #d4457a;
+  --color-accent-hover: #e05b8a;
+  
+  /* Auxiliares de erro */
+  --color-error: #c94040;
+  --color-error-bg: rgba(201, 64, 64, 0.05);
+  --color-error-border: rgba(201, 64, 64, 0.2);
 }
 
-a { color: inherit; text-decoration: none; }
-button { font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; outline: none; }
-input, textarea { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; }
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root { height: 100%; }
+  
+  body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 16px; /* Define 16px como padrão do sistema */
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    @apply bg-bg-page text-tx-main;
+  }
+  
+  a { text-decoration: none; color: inherit; }
+  button { @apply font-sans cursor-pointer outline-none border-none text-base; }
+  input, textarea { @apply font-sans text-sm; }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #f5f4f2; }
-::-webkit-scrollbar-thumb { background: #cec9c5; border-radius: 3px; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { @apply bg-bg-page; }
+  ::-webkit-scrollbar-thumb { @apply bg-[#cec9c5] rounded-[3px]; }
+}
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
