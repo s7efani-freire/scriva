@@ -23,7 +23,11 @@ router.post('/processar', upload.single('audio'), async (req, res) => {
     console.log('🤖 Gerando ATA...')
     const ata = await gerarAta(transcricao, tipo)
     console.log('✅ ATA gerada')
-    const hoje = new Date().toLocaleDateString('pt-BR')
+    const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    const [dataStr, horaStr] = agora.split(', ')
+    const hoje = dataStr
+    ata.data = hoje
+    ata.hora = horaStr.slice(0, 5)
     const participantes = ata.participantes?.join(', ') || ''
     const db = getDb()
     const stmt = db.prepare(`INSERT INTO dailys (data, transcricao, ata, participantes, tipo) VALUES (?, ?, ?, ?, ?)`)
