@@ -2,19 +2,6 @@ import { useState, useEffect } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { atualizarAta } from '../services/api.js'
 
-const S = {
-  card: { background: '#fff', border: '1px solid #e0ddd9', borderRadius: '14px', padding: '22px 26px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  badge: { fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#d4457a', background: 'rgba(212,69,122,0.07)', border: '1px solid rgba(212,69,122,0.2)', padding: '3px 10px', borderRadius: '100px' },
-  sectionTitle: { fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#a09890', marginBottom: '8px' },
-  tag: { fontSize: '11px', fontWeight: 500, color: '#6b6560', background: '#eeeceb', border: '1px solid #e0ddd9', padding: '3px 10px', borderRadius: '100px' },
-  personCard: { background: '#fff', border: '1px solid #e0ddd9', borderRadius: '10px', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' },
-  label: { fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#a09890' },
-  textarea: { width: '100%', background: '#eeeceb', border: '1px solid #e0ddd9', borderRadius: '6px', color: '#18150f', fontSize: '13px', lineHeight: 1.6, padding: '8px 10px', resize: 'vertical', outline: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-  listCard: { background: '#fff', border: '1px solid #e0ddd9', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' },
-  listItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', fontSize: '13px', color: '#6b6560', borderBottom: '1px solid #e0ddd9' },
-  inputLine: { flex: 1, background: 'transparent', border: 'none', color: '#18150f', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none' },
-}
-
 export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }) {
   const [ata, setAta] = useState(ataInicial)
   const [salvando, setSalvando] = useState(false)
@@ -34,10 +21,17 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
     }
   }, [blocker.state])
 
-  function marcar() { setAlterado(true); setSalvo(false) }
-  function atualizarPessoa(i, campo, valor) { setAta({ ...ata, pessoas: ata.pessoas.map((p, j) => j === i ? { ...p, [campo]: valor } : p) }); marcar() }
-  function atualizarDecisao(i, valor) { setAta({ ...ata, decisoes: ata.decisoes.map((d, j) => j === i ? valor : d) }); marcar() }
-  function atualizarAcao(i, campo, valor) { setAta({ ...ata, acoes: ata.acoes.map((a, j) => j === i ? { ...a, [campo]: valor } : a) }); marcar() }
+  const marcar = () => { setAlterado(true); setSalvo(false) }
+
+  const attCampo = (campo, valor) => {
+    setAta(prev => ({ ...prev, [campo]: valor })); marcar()
+  }
+  const attArrayItem = (lista, i, valor) => {
+    setAta(prev => ({ ...prev, [lista]: prev[lista].map((item, j) => j === i ? valor : item) })); marcar()
+  }
+  const attArrayObj = (lista, i, campo, valor) => {
+    setAta(prev => ({ ...prev, [lista]: prev[lista].map((item, j) => j === i ? { ...item, [campo]: valor } : item) })); marcar()
+  }
 
   function descartar() {
     if (!window.confirm('Descartar todas as alterações?')) return
@@ -46,54 +40,97 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
 
   async function salvar() {
     if (!dailyId) return
-    try { setSalvando(true); await atualizarAta(dailyId, ata); setSalvo(true); setAlterado(false) }
-    catch (err) { console.error(err) }
-    finally { setSalvando(false) }
+    try {
+      setSalvando(true)
+      await atualizarAta(dailyId, ata)
+      setSalvo(true)
+      setAlterado(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSalvando(false)
+    }
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+  const noNull = (v) => (!v || v === 'null' ? '' : v)
+  const isNull = (v) => (!v || v === 'null')
 
-      {/* Resumo */}
-      <div style={S.card}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <span style={S.badge}>Resumo</span>
-          {ata.data && <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#a09890' }}>{ata.data}</span>}
+  const pV = (ata.pessoas || []).filter(p => !isNull(p.nome))
+  const discV = (ata.discussoes || []).filter(d => !isNull(d.topico) || !isNull(d.detalhes))
+  const projV = (ata.projetos || []).filter(p => !isNull(p.nome) || !isNull(p.status))
+  const decV = (ata.decisoes || []).filter(d => !isNull(d))
+  const bloqV = (ata.bloqueios || []).filter(b => !isNull(b))
+  const acoesV = (ata.acoes || []).filter(a => !isNull(a.tarefa))
+  const riscosV = (ata.riscos || []).filter(r => !isNull(r))
+  const obsV = !isNull(ata.observacoes)
+
+  return (
+    <div className="flex flex-col gap-8 pb-10">
+
+
+      <div className="bg-bg-card border border-brd rounded-2xl p-6 md:p-8 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 px-3.5 py-1.5 rounded-full">
+            Resumo
+          </span>
+          {ata.data && <span className="font-mono text-sm text-tx-ter">{ata.data}</span>}
         </div>
-        <p style={{ fontSize: '14px', color: '#18150f', lineHeight: 1.75 }}>{ata.resumo}</p>
-        {ata.participantes?.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '14px' }}>
-            {ata.participantes.map((p, i) => <span key={i} style={S.tag}>{p}</span>)}
+
+        {readOnly ? (
+          <p className="text-lg text-tx-main leading-relaxed">{noNull(ata.resumo)}</p>
+        ) : (
+          <textarea
+            className="w-full bg-bg-page border border-brd rounded-xl text-tx-main text-lg leading-relaxed px-5 py-4 resize-y outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 font-sans transition-all shadow-inner"
+            value={noNull(ata.resumo)}
+            onChange={(e) => attCampo('resumo', e.target.value)}
+            rows={4}
+          />
+        )}
+
+        {ata.participantes?.length > 0 && !isNull(ata.participantes[0]) && (
+          <div className="flex flex-wrap gap-2.5 mt-6">
+            {ata.participantes.map((p, i) => !isNull(p) && (
+              <span key={i} className="text-sm font-medium text-tx-sec bg-bg-page border border-brd px-4 py-1.5 rounded-full shadow-sm">
+                {p}
+              </span>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Por pessoa */}
-      {ata.pessoas?.length > 0 && (
+
+      {pV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Por participante</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
-            {ata.pessoas.map((pessoa, i) => (
-              <div key={i} style={S.personCard}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #e0ddd9', fontSize: '13px', fontWeight: 700, color: '#18150f' }}>
-                  <span style={{ width: '7px', height: '7px', background: '#d4457a', borderRadius: '50%', flexShrink: 0 }} />
-                  {pessoa.nome}
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Por participante</p>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            {ata.pessoas.map((pessoa, i) => !isNull(pessoa.nome) && (
+              <div key={i} className="bg-bg-card border border-brd rounded-xl p-6 flex flex-col gap-5 shadow-sm">
+                <div className="flex items-center gap-3 pb-4 border-b border-brd text-lg font-bold text-tx-main">
+                  <span className="w-2.5 h-2.5 bg-accent rounded-full shrink-0" />
+                  {readOnly ? (
+                    <span>{noNull(pessoa.nome)}</span>
+                  ) : (
+                    <input className="bg-transparent border-none outline-none font-bold text-lg w-full text-tx-main" value={noNull(pessoa.nome)} onChange={e => attArrayObj('pessoas', i, 'nome', e.target.value)} placeholder="Nome do participante" />
+                  )}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={S.label}>✓ Feito</label>
-                  {readOnly ? <p style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.6 }}>{pessoa.feito || '—'}</p> :
-                    <textarea style={S.textarea} value={pessoa.feito || ''} onChange={(e) => atualizarPessoa(i, 'feito', e.target.value)} rows={3} />}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-wide text-tx-ter">✓ Feito</label>
+                  {readOnly ? <p className="text-base text-tx-sec leading-relaxed">{noNull(pessoa.feito) || '—'}</p> :
+                    <textarea className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-base leading-relaxed px-4 py-3 resize-y outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-sans" value={noNull(pessoa.feito)} onChange={(e) => attArrayObj('pessoas', i, 'feito', e.target.value)} rows={3} placeholder="O que foi feito..." />}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={S.label}>→ Vai fazer</label>
-                  {readOnly ? <p style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.6 }}>{pessoa.farA || '—'}</p> :
-                    <textarea style={S.textarea} value={pessoa.farA || ''} onChange={(e) => atualizarPessoa(i, 'farA', e.target.value)} rows={3} />}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-wide text-tx-ter">→ Vai fazer</label>
+                  {readOnly ? <p className="text-base text-tx-sec leading-relaxed">{noNull(pessoa.farA) || '—'}</p> :
+                    <textarea className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-base leading-relaxed px-4 py-3 resize-y outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-sans" value={noNull(pessoa.farA)} onChange={(e) => attArrayObj('pessoas', i, 'farA', e.target.value)} rows={3} placeholder="O que vai fazer..." />}
                 </div>
-                {pessoa.impedimentos && pessoa.impedimentos !== 'null' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ ...S.label, color: '#b87320' }}>⚠ Impedimento</label>
-                    {readOnly ? <p style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.6 }}>{pessoa.impedimentos}</p> :
-                      <textarea style={{ ...S.textarea, borderColor: 'rgba(184,115,32,0.3)' }} value={pessoa.impedimentos} onChange={(e) => atualizarPessoa(i, 'impedimentos', e.target.value)} rows={2} />}
+
+                {(!readOnly || !isNull(pessoa.impedimentos)) && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold uppercase tracking-wide text-[#b87320]">⚠ Impedimento</label>
+                    {readOnly ? <p className="text-base text-tx-sec leading-relaxed">{noNull(pessoa.impedimentos)}</p> :
+                      <textarea className="w-full bg-[#fdfaf6] border border-[#e8d5c4] focus:border-[#b87320] focus:ring-1 focus:ring-[#b87320] rounded-lg text-tx-main text-base leading-relaxed px-4 py-3 resize-y outline-none transition-all font-sans" value={noNull(pessoa.impedimentos)} onChange={(e) => attArrayObj('pessoas', i, 'impedimentos', e.target.value)} rows={2} placeholder="Há algum impedimento?" />}
                   </div>
                 )}
               </div>
@@ -102,121 +139,182 @@ export default function AtaViewer({ ata: ataInicial, dailyId, readOnly = false }
         </div>
       )}
 
-      {/* Discussões */}
-      {ata.discussoes?.length > 0 && (
+
+      {discV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Discussões</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {ata.discussoes.map((d, i) => (
-              <div key={i} style={{ ...S.card, borderLeft: '3px solid #f0a0bc', padding: '14px 18px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#18150f', marginBottom: '4px' }}>{d.topico}</div>
-                <div style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.65 }}>{d.detalhes}</div>
-                {d.responsavel && <span style={{ ...S.tag, marginTop: '8px', display: 'inline-block' }}>{d.responsavel}</span>}
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Discussões</p>
+          <div className="flex flex-col gap-4">
+            {ata.discussoes.map((d, i) => (!isNull(d.topico) || !isNull(d.detalhes)) && (
+              <div key={i} className="bg-bg-card border border-brd border-l-4 border-l-[#f0a0bc] rounded-xl p-6 shadow-sm">
+                {readOnly ? (
+                  <>
+                    <div className="text-lg font-bold text-tx-main mb-2">{noNull(d.topico)}</div>
+                    <div className="text-base text-tx-sec leading-relaxed">{noNull(d.detalhes)}</div>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <input className="w-full bg-transparent border-b border-brd pb-2 text-tx-main text-lg font-bold outline-none focus:border-accent transition-colors" value={noNull(d.topico)} onChange={e => attArrayObj('discussoes', i, 'topico', e.target.value)} placeholder="Tópico da discussão" />
+                    <textarea className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-base leading-relaxed px-4 py-3 resize-y outline-none focus:border-accent/50 focus:ring-1 font-sans" value={noNull(d.detalhes)} onChange={e => attArrayObj('discussoes', i, 'detalhes', e.target.value)} rows={3} placeholder="Detalhes da discussão..." />
+                  </div>
+                )}
+                {d.responsavel && !isNull(d.responsavel) && (
+                  <span className="inline-block mt-4 text-sm font-medium text-tx-sec bg-bg-page border border-brd px-3 py-1 rounded-full">{d.responsavel}</span>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Projetos */}
-      {ata.projetos?.length > 0 && (
+
+      {projV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Projetos</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
-            {ata.projetos.map((p, i) => (
-              <div key={i} style={{ ...S.card, borderLeft: '3px solid #d4457a', padding: '14px 16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#18150f' }}>{p.nome}</div>
-                <div style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.5, marginTop: '4px' }}>{p.status}</div>
-                {p.destaques && <div style={{ fontSize: '13px', color: '#6b6560', lineHeight: 1.5, marginTop: '4px' }}>{p.destaques}</div>}
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Projetos</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {ata.projetos.map((p, i) => (!isNull(p.nome) || !isNull(p.status)) && (
+              <div key={i} className="bg-bg-card border border-brd border-l-4 border-l-accent rounded-xl p-5 shadow-sm flex flex-col gap-3">
+                {readOnly ? (
+                  <>
+                    <div className="text-lg font-bold text-tx-main">{noNull(p.nome)}</div>
+                    <div className="text-base text-tx-sec leading-relaxed">{noNull(p.status)}</div>
+                    {!isNull(p.destaques) && <div className="text-base text-tx-sec leading-relaxed">{noNull(p.destaques)}</div>}
+                  </>
+                ) : (
+                  <>
+                    <input className="w-full bg-transparent border-b border-brd pb-2 text-tx-main text-lg font-bold outline-none focus:border-accent" value={noNull(p.nome)} onChange={e => attArrayObj('projetos', i, 'nome', e.target.value)} placeholder="Nome do Projeto" />
+                    <input className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-base px-4 py-2.5 outline-none focus:border-accent/50" value={noNull(p.status)} onChange={e => attArrayObj('projetos', i, 'status', e.target.value)} placeholder="Status do projeto" />
+                    <textarea className="w-full bg-bg-page border border-brd rounded-lg text-tx-main text-base leading-relaxed px-4 py-3 outline-none focus:border-accent/50 font-sans" value={noNull(p.destaques)} onChange={e => attArrayObj('projetos', i, 'destaques', e.target.value)} rows={2} placeholder="Destaques / Atualizações" />
+                  </>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Decisões */}
-      {ata.decisoes?.length > 0 && (
+
+      {decV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Decisões</p>
-          <div style={S.listCard}>
-            {ata.decisoes.map((d, i) => (
-              <div key={i} style={{ ...S.listItem, borderBottom: i < ata.decisoes.length - 1 ? '1px solid #e0ddd9' : 'none' }}>
-                <span style={{ fontSize: '6px', color: '#d4457a', flexShrink: 0 }}>◆</span>
-                {readOnly ? <span>{d}</span> :
-                  <input style={S.inputLine} value={d} onChange={(e) => atualizarDecisao(i, e.target.value)} />}
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Decisões</p>
+          <div className="bg-bg-card border border-brd rounded-xl overflow-hidden shadow-sm flex flex-col">
+            {ata.decisoes.map((d, i) => !isNull(d) && (
+              <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-brd last:border-b-0">
+                <span className="text-[10px] text-accent mt-1.5 shrink-0">◆</span>
+                {readOnly ? <span className="text-base text-tx-main leading-relaxed">{noNull(d)}</span> :
+                  <input className="flex-1 bg-transparent border-none text-tx-main text-base font-sans outline-none w-full" value={noNull(d)} onChange={(e) => attArrayItem('decisoes', i, e.target.value)} placeholder="Descreva a decisão..." />}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Bloqueios */}
-      {ata.bloqueios?.length > 0 && (
+
+      {bloqV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Bloqueios</p>
-          <div style={S.listCard}>
-            {ata.bloqueios.map((b, i) => (
-              <div key={i} style={{ ...S.listItem, borderBottom: i < ata.bloqueios.length - 1 ? '1px solid #e0ddd9' : 'none' }}>
-                <span style={{ color: '#b87320', flexShrink: 0 }}>⚠</span><span>{b}</span>
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Bloqueios</p>
+          <div className="bg-bg-card border border-brd rounded-xl overflow-hidden shadow-sm flex flex-col">
+            {ata.bloqueios.map((b, i) => !isNull(b) && (
+              <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-brd last:border-b-0">
+                <span className="text-[#b87320] mt-0.5 shrink-0">⚠</span>
+                {readOnly ? <span className="text-base text-tx-main leading-relaxed">{noNull(b)}</span> :
+                  <input className="flex-1 bg-transparent border-none text-tx-main text-base font-sans outline-none w-full" value={noNull(b)} onChange={(e) => attArrayItem('bloqueios', i, e.target.value)} placeholder="Descreva o bloqueio..." />}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Ações */}
-      {ata.acoes?.length > 0 && (
+
+      {acoesV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Ações</p>
-          <div style={S.listCard}>
-            {ata.acoes.map((a, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderBottom: i < ata.acoes.length - 1 ? '1px solid #e0ddd9' : 'none', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#d4457a', background: 'rgba(212,69,122,0.07)', border: '1px solid rgba(212,69,122,0.2)', padding: '2px 8px', borderRadius: '100px', whiteSpace: 'nowrap', flexShrink: 0 }}>{a.responsavel || 'Time'}</span>
-                {readOnly ? <span style={{ fontSize: '13px', color: '#6b6560', flex: 1 }}>{a.tarefa}</span> :
-                  <input style={{ ...S.inputLine, flex: 1 }} value={a.tarefa} onChange={(e) => atualizarAcao(i, 'tarefa', e.target.value)} />}
-                {a.prazo && <span style={S.tag}>{a.prazo}</span>}
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Ações</p>
+          <div className="bg-bg-card border border-brd rounded-xl overflow-hidden shadow-sm flex flex-col">
+            {ata.acoes.map((a, i) => !isNull(a.tarefa) && (
+              <div key={i} className="flex flex-col md:flex-row md:items-center gap-4 px-5 py-4 border-b border-brd last:border-b-0">
+                {readOnly ? (
+                  <span className="w-fit text-xs font-bold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap shrink-0">
+                    {noNull(a.responsavel) || 'Time'}
+                  </span>
+                ) : (
+                  <input className="w-fit md:w-32 bg-accent/10 border border-accent/20 rounded-full text-accent text-xs font-bold px-3 py-1.5 outline-none focus:bg-accent/20 text-center" value={noNull(a.responsavel)} onChange={e => attArrayObj('acoes', i, 'responsavel', e.target.value)} placeholder="Responsável" />
+                )}
+
+                {readOnly ? <span className="text-base text-tx-main flex-1 leading-relaxed">{noNull(a.tarefa)}</span> :
+                  <input className="flex-1 bg-transparent border-none text-tx-main text-base font-sans outline-none min-w-[200px]" value={noNull(a.tarefa)} onChange={(e) => attArrayObj('acoes', i, 'tarefa', e.target.value)} placeholder="Descreva a tarefa..." />}
+
+                {a.prazo && !isNull(a.prazo) && (
+                  <span className="w-fit text-sm font-medium text-tx-sec bg-bg-page border border-brd px-4 py-1.5 rounded-full">{a.prazo}</span>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Riscos */}
-      {ata.riscos?.length > 0 && (
+
+      {riscosV.length > 0 && (
         <div>
-          <p style={S.sectionTitle}>Riscos</p>
-          <div style={S.listCard}>
-            {ata.riscos.map((r, i) => (
-              <div key={i} style={{ ...S.listItem, borderBottom: i < ata.riscos.length - 1 ? '1px solid #e0ddd9' : 'none' }}>
-                <span style={{ color: '#c94040', flexShrink: 0 }}>▲</span><span>{r}</span>
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Riscos</p>
+          <div className="bg-bg-card border border-brd rounded-xl overflow-hidden shadow-sm flex flex-col">
+            {ata.riscos.map((r, i) => !isNull(r) && (
+              <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-brd last:border-b-0">
+                <span className="text-error mt-0.5 shrink-0">▲</span>
+                {readOnly ? <span className="text-base text-tx-main leading-relaxed">{noNull(r)}</span> :
+                  <input className="flex-1 bg-transparent border-none text-tx-main text-base font-sans outline-none w-full" value={noNull(r)} onChange={(e) => attArrayItem('riscos', i, e.target.value)} placeholder="Descreva o risco..." />}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Observações */}
-      {ata.observacoes && ata.observacoes !== 'null' && (
+
+      {obsV && (
         <div>
-          <p style={S.sectionTitle}>Observações</p>
-          <div style={S.listCard}>
-            <p style={{ padding: '14px 16px', fontSize: '13px', color: '#6b6560', lineHeight: 1.7 }}>{ata.observacoes}</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-tx-ter mb-4">Observações</p>
+          <div className="bg-bg-card border border-brd rounded-xl shadow-sm p-2">
+            {readOnly ? (
+              <p className="p-4 text-base text-tx-main leading-relaxed">{noNull(ata.observacoes)}</p>
+            ) : (
+              <textarea
+                className="w-full bg-transparent border-none text-tx-main text-base leading-relaxed px-4 py-3 resize-y outline-none font-sans"
+                value={noNull(ata.observacoes)}
+                onChange={(e) => attCampo('observacoes', e.target.value)}
+                rows={3}
+                placeholder="Adicione observações gerais..."
+              />
+            )}
           </div>
         </div>
       )}
 
-      {/* Salvar */}
+
       {!readOnly && dailyId && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', paddingTop: '4px' }}>
-          {salvo && <span style={{ fontSize: '12px', color: '#3a7a52', fontWeight: 600 }}>✓ Alterações salvas</span>}
+        <div className="flex flex-wrap items-center justify-end gap-4 pt-6 mt-4 sticky bottom-6 z-10">
+          {salvo && <span className="text-base text-[#3a7a52] font-semibold bg-bg-page px-4 py-2 rounded-lg border border-[#e0ddd9]">✓ Alterações salvas</span>}
+
           {alterado && (
-            <button onClick={descartar} style={{ background: '#fff', border: '1px solid #cec9c5', color: '#6b6560', fontSize: '13px', fontWeight: 500, padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s' }}>
+            <button onClick={descartar} className="bg-bg-card border border-[#cec9c5] text-tx-sec hover:bg-bg-page text-base font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm">
               Descartar
             </button>
           )}
-          <button onClick={salvar} disabled={salvando || !alterado} style={{ background: alterado ? '#d4457a' : '#e0ddd9', color: alterado ? '#fff' : '#a09890', fontSize: '13px', fontWeight: 600, padding: '8px 20px', borderRadius: '8px', cursor: alterado ? 'pointer' : 'not-allowed', border: 'none', transition: 'all 0.15s' }}>
+          <button
+            type="button"
+            onClick={() => window.location.href = '/'}
+            className="bg-white border border-[#cec9c5] text-tx-sec hover:bg-bg-page text-base font-semibold py-2.5 px-6 rounded-xl transition-all shadow-sm hover:border-[#b4aeaa]"
+          >
+            Fechar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando || !alterado}
+            className={`text-base font-semibold py-2.5 px-8 rounded-xl transition-all shadow-sm ${alterado
+              ? 'bg-accent hover:bg-accent-hover text-white shadow-md hover:-translate-y-0.5'
+              : 'bg-brd text-tx-ter cursor-not-allowed'
+              }`}
+          >
             {salvando ? 'Salvando...' : 'Salvar alterações'}
           </button>
+
         </div>
       )}
     </div>
