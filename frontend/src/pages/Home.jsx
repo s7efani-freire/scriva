@@ -74,7 +74,6 @@ export default function Home() {
     </span>
   )
 
-
   if (estado === 'pronto' && resultado) {
     return (
       <div className="p-6 md:p-10 max-w-7xl mx-auto animate-[fadeIn_0.3s_ease]">
@@ -91,7 +90,7 @@ export default function Home() {
             Nova gravação
           </button>
         </div>
-        <AtaViewer ata={resultado.ata} dailyId={resultado.id} />
+        <AtaViewer ata={resultado.ata} dailyId={resultado.id} tipo={tipo} onFechar={handleNova} />
       </div>
     )
   }
