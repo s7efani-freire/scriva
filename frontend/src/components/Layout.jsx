@@ -1,10 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom'
 
 const TIPOS = [
-  { slug: 'daily', label: 'Daily', icon: '◷', desc: 'Standup diário' },
-  { slug: 'projeto', label: 'Reunião de Projeto', icon: '◈', desc: 'Projeto específico' },
-  { slug: 'alinhamento', label: 'Alinhamento', icon: '◎', desc: 'Múltiplos projetos' },
-  { slug: 'geral', label: 'Reunião Geral', icon: '◇', desc: 'Reunião avulsa' },
+  { slug: 'daily',       label: 'Daily',              icon: '◷', desc: 'Standup diário' },
+  { slug: 'projeto',     label: 'Reunião de Projeto', icon: '◈', desc: 'Projeto específico' },
+  { slug: 'alinhamento', label: 'Alinhamento',        icon: '◎', desc: 'Múltiplos projetos' },
+  { slug: 'geral',       label: 'Reunião Geral',      icon: '◇', desc: 'Reunião avulsa' },
 ]
 
 export default function Layout({ children }) {
@@ -15,11 +15,18 @@ export default function Layout({ children }) {
 
       <aside className="w-full md:w-[260px] md:min-w-[260px] bg-bg-card border-b md:border-b-0 md:border-r border-brd flex flex-col p-4 md:p-6 gap-4 md:gap-6 shrink-0 z-10 shadow-sm md:shadow-none">
 
-        <div className="flex items-center gap-2.5 px-2 shrink-0">
-          <div className="w-8 h-8 bg-accent text-white text-base font-bold flex items-center justify-center rounded-lg shrink-0">
-            S
+        <div className="flex items-center gap-3 px-2 shrink-0">
+          <div className="w-9 h-9 bg-accent/10 flex items-center justify-center rounded-xl shrink-0 border border-accent/20 shadow-xs">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+              <rect x="9" y="4" width="6" height="10" rx="3" className="fill-current opacity-90" />
+              <path d="M5 10c0 3.5 2.5 6.4 6 6.9V20h2v-3.1c3.5-.5 6-3.4 6-6.9h-2c0 2.8-2.2 5-5 5s-5-2.2-5-5H5z" fill="currentColor" />
+              <line x1="3" y1="10" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+              <line x1="21" y1="10" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+            </svg>
           </div>
-          <span className="text-xl font-bold tracking-tight text-tx-main">scriva</span>
+          <span className="text-2xl font-black tracking-tighter bg-linear-to-r from-tx-main via-tx-main to-accent bg-clip-text text-transparent select-none">
+            scriva<span className="text-accent">.</span>
+          </span>
         </div>
 
         <div className="flex md:flex-col gap-4 md:gap-5 overflow-x-auto md:overflow-y-auto pb-2 md:pb-0 hide-scrollbar shrink-0 md:h-full">
@@ -68,12 +75,12 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        <div className="hidden md:flex mt-auto pt-4 border-t border-brd items-center justify-between px-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#3a7a52] shrink-0" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
-            <span className="text-[11px] text-tx-ter">Groq · Whisper</span>
+        <div className="hidden md:flex mt-auto pt-4 border-t border-brd flex-col gap-1 px-2">
+          <span className="text-[10px] font-bold uppercase tracking-[1.2px] text-tx-ter mb-1">Modelos</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] text-tx-ter">AssemblyAI Universal-2</span>
+            <span className="text-[11px] text-tx-ter">Groq LLaMA 3.3 70B</span>
           </div>
-          <span className="text-[11px] text-tx-ter font-mono">v1.1</span>
         </div>
       </aside>
 
