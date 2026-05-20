@@ -37,8 +37,7 @@ export default function DetalheDaily() {
           Registrada às {new Date(daily.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
-      
-      {/* O AtaViewer será renderizado aqui */}
+
       <AtaViewer ata={daily.ata} dailyId={daily.id} />
     </div>
   )
