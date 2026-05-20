@@ -35,7 +35,21 @@ router.post('/processar', upload.single('audio'), async (req, res) => {
     res.json({ id: result.lastInsertRowid, transcricao, ata })
   } catch (err) {
     console.error('❌ Erro:', err.message)
-    res.status(500).json({ erro: err.message })
+    const msg = err.message || ''
+    if (msg.includes('rate_limit') && msg.includes('seconds of audio')) {
+      return res.status(429).json({ erro: 'Limite de transcrição atingido. O serviço de transcrição (AssemblyAI) atingiu o limite de uso. Tente novamente mais tarde.' })
+    }
+    if (msg.includes('rate_limit') && (msg.includes('tokens') || msg.includes('llama') || msg.includes('groq'))) {
+      const tempo = msg.match(/try again in (.+?)\./)?.[1] || 'alguns minutos'
+      return res.status(429).json({ erro: `Limite de tokens da IA atingido. Tente novamente em ${tempo}.` })
+    }
+    if (msg.includes('Invalid API key') || msg.includes('authentication')) {
+      return res.status(401).json({ erro: 'Chave de API inválida. Verifique as configurações no arquivo .env.' })
+    }
+    if (msg.includes('upload') || msg.includes('AssemblyAI')) {
+      return res.status(502).json({ erro: 'Erro na transcrição do áudio. Verifique sua conexão e tente novamente.' })
+    }
+    res.status(500).json({ erro: 'Erro interno ao processar a reunião. Tente novamente.' })
   }
 })
 
