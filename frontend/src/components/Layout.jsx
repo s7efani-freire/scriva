@@ -2,85 +2,89 @@ import { NavLink, useLocation } from 'react-router-dom'
 
 const TIPOS = [
   { slug: 'daily',       label: 'Daily',              icon: '◷', desc: 'Standup diário' },
-  { slug: 'projeto',     label: 'Reunião de Projeto',  icon: '◈', desc: 'Projeto específico' },
-  { slug: 'alinhamento', label: 'Alinhamento',         icon: '◎', desc: 'Múltiplos projetos' },
-  { slug: 'geral',       label: 'Reunião Geral',       icon: '◇', desc: 'Reunião avulsa' },
+  { slug: 'projeto',     label: 'Reunião de Projeto', icon: '◈', desc: 'Projeto específico' },
+  { slug: 'alinhamento', label: 'Alinhamento',        icon: '◎', desc: 'Múltiplos projetos' },
+  { slug: 'geral',       label: 'Reunião Geral',      icon: '◇', desc: 'Reunião avulsa' },
 ]
 
 export default function Layout({ children }) {
   const location = useLocation()
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <aside style={{
-        width: '220px', minWidth: '220px', background: '#fff',
-        borderRight: '1px solid #e0ddd9', display: 'flex', flexDirection: 'column',
-        padding: '20px 12px', gap: '24px'
-      }}>
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      
+      {/* Sidebar Responsiva */}
+      <aside className="w-full md:w-[260px] md:min-w-[260px] bg-bg-card border-b md:border-b-0 md:border-r border-brd flex flex-col p-5 md:py-6 md:px-4 gap-6 shrink-0 z-10 shadow-sm md:shadow-none">
+        
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 6px' }}>
-          <div style={{
-            width: '28px', height: '28px', background: '#d4457a', color: '#fff',
-            fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', borderRadius: '7px', flexShrink: 0
-          }}>S</div>
-          <span style={{ fontSize: '17px', fontWeight: 700, letterSpacing: '-0.3px', color: '#18150f' }}>scriva</span>
-        </div>
-
-        {/* Nova gravação */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: '#a09890', padding: '0 8px', marginBottom: '4px', display: 'block' }}>Nova gravação</span>
-          {TIPOS.map((t) => {
-            const isActive = location.pathname === '/' && location.search === `?tipo=${t.slug}`
-            return (
-              <NavLink key={t.slug} to={`/?tipo=${t.slug}`} style={{
-                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px',
-                borderRadius: '6px', border: '1px solid',
-                borderColor: isActive ? 'rgba(212,69,122,0.2)' : 'transparent',
-                background: isActive ? 'rgba(212,69,122,0.06)' : 'transparent',
-                color: isActive ? '#d4457a' : '#6b6560',
-                textDecoration: 'none', transition: 'all 0.12s'
-              }}>
-                <span style={{ fontSize: '13px', width: '18px', textAlign: 'center', flexShrink: 0 }}>{t.icon}</span>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
-                  <span style={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.label}</span>
-                  <span style={{ fontSize: '10px', color: isActive ? 'rgba(212,69,122,0.5)' : '#a09890', lineHeight: 1.2 }}>{t.desc}</span>
-                </span>
-              </NavLink>
-            )
-          })}
-        </div>
-
-        {/* Registros */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: '#a09890', padding: '0 8px', marginBottom: '4px', display: 'block' }}>Registros</span>
-          <NavLink to="/historico" style={({ isActive }) => ({
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px',
-            borderRadius: '6px', border: '1px solid',
-            borderColor: isActive ? 'rgba(212,69,122,0.2)' : 'transparent',
-            background: isActive ? 'rgba(212,69,122,0.06)' : 'transparent',
-            color: isActive ? '#d4457a' : '#6b6560',
-            textDecoration: 'none', transition: 'all 0.12s'
-          })}>
-            <span style={{ fontSize: '13px', width: '18px', textAlign: 'center' }}>≡</span>
-            <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2 }}>Histórico</span>
-              <span style={{ fontSize: '10px', color: '#a09890', lineHeight: 1.2 }}>Todas as reuniões</span>
-            </span>
-          </NavLink>
-        </div>
-
-        {/* Footer */}
-        <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #e0ddd9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 6px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3a7a52', animation: 'pulse 2s ease-in-out infinite', flexShrink: 0 }} />
-            <span style={{ fontSize: '9px', color: '#a09890' }}>Groq · Whisper · LLaMA</span>
+        <div className="flex items-center gap-2.5 px-2 shrink-0">
+          <div className="w-8 h-8 bg-accent text-white text-base font-bold flex items-center justify-center rounded-lg shrink-0">
+            S
           </div>
-          <span style={{ fontSize: '9px', color: '#a09890', fontFamily: 'monospace' }}>v1.1</span>
+          <span className="text-xl font-bold tracking-tight text-tx-main">scriva</span>
+        </div>
+
+        {/* Links de Navegação */}
+        <div className="flex md:flex-col gap-6 md:gap-5 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar">
+          
+          {/* Sessão: Nova gravação */}
+          <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 shrink-0">
+            <span className="hidden md:block text-xs font-bold uppercase tracking-[1.2px] text-tx-ter px-2 mb-1.5">
+              Nova gravação
+            </span>
+            {TIPOS.map((t) => {
+              const isActive = location.pathname === '/' && location.search === `?tipo=${t.slug}` || (location.pathname === '/' && !location.search && t.slug === 'daily')
+              return (
+                <NavLink key={t.slug} to={`/?tipo=${t.slug}`} className={`
+                  flex items-center gap-3 p-3 md:py-3.5 md:px-4 rounded-xl border transition-all shrink-0 w-full
+                  ${isActive 
+                    ? 'border-accent/20 bg-accent/10 text-accent font-semibold shadow-sm' 
+                    : 'border-transparent bg-transparent text-tx-sec hover:bg-bg-page'
+                  }
+                `}>
+                  <span className="text-base md:text-lg w-[20px] text-center shrink-0">{t.icon}</span>
+                  <span className="flex flex-col gap-[2px] min-w-0">
+                    <span className="text-sm md:text-base leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{t.label}</span>
+                    <span className={`text-xs leading-tight hidden md:block ${isActive ? 'text-accent/50' : 'text-tx-ter'}`}>{t.desc}</span>
+                  </span>
+                </NavLink>
+              )
+            })}
+          </div>
+
+          {/* Sessão: Registros */}
+          <div className="flex flex-col gap-1.5 shrink-0 md:mt-4 w-full">
+            <span className="hidden md:block text-xs font-bold uppercase tracking-[1.2px] text-tx-ter px-2 mb-1.5">
+              Registros
+            </span>
+            <NavLink to="/historico" className={({ isActive }) => `
+              flex items-center gap-3 p-3 md:py-3.5 md:px-4 rounded-xl border transition-all w-full
+              ${isActive 
+                ? 'border-accent/20 bg-accent/10 text-accent font-semibold shadow-sm' 
+                : 'border-transparent bg-transparent text-tx-sec hover:bg-bg-page'
+              }
+            `}>
+              <span className="text-base md:text-lg w-[20px] text-center">≡</span>
+              <span className="flex flex-col gap-[2px]">
+                <span className="text-sm md:text-base leading-tight">Histórico</span>
+                <span className="text-xs text-tx-ter leading-tight hidden md:block">Todas as reuniões</span>
+              </span>
+            </NavLink>
+          </div>
+        </div>
+
+        {/* Footer Sidebar (Oculto no mobile) */}
+        <div className="hidden md:flex mt-auto pt-4 border-t border-brd items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#3a7a52] shrink-0" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+            <span className="text-[11px] text-tx-ter">Groq · Whisper</span>
+          </div>
+          <span className="text-[11px] text-tx-ter font-mono">v1.1</span>
         </div>
       </aside>
 
-      <main style={{ flex: 1, overflowY: 'auto', background: '#f5f4f2' }}>
+      {/* Conteúdo Principal */}
+      <main className="flex-1 overflow-y-auto bg-bg-page">
         {children}
       </main>
     </div>
