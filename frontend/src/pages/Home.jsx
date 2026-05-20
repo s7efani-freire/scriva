@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useGravacao } from '../hooks/useGravacao.js'
 import { processarAudio } from '../services/api.js'
 import AtaViewer from '../components/AtaViewer.jsx'
+import Wave from '../components/Wave.jsx'
 
 const TIPOS_INFO = {
   daily: { label: 'Daily', icon: '◷', color: '#d4457a', bg: 'rgba(212,69,122,0.07)', border: 'rgba(212,69,122,0.2)' },
@@ -13,6 +14,14 @@ const TIPOS_INFO = {
 
 const BARRAS = 32
 
+const FASES_PROGRESSO = [
+  { ate: 40, label: 'Enviando áudio seguro...', duracao: 3000 },
+  { ate: 70, label: 'Transcrevendo com Whisper...', duracao: 8000 },
+  { ate: 88, label: 'Analisando tópicos e decisões...', duracao: 4000 },
+  { ate: 95, label: 'Gerando ATA com LLaMA 3.3...', duracao: 6000 },
+  { ate: 99, label: 'Finalizando estrutura...', duracao: 4000 },
+]
+
 export default function Home() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -22,9 +31,11 @@ export default function Home() {
   const { estado, setEstado, tempoGravacao, volume, erro, iniciarGravacao, pausarGravacao, retormarGravacao, pararGravacao, resetar } = useGravacao()
   const [resultado, setResultado] = useState(null)
   const [progresso, setProgresso] = useState(0)
+  const [progressoLabel, setProgressoLabel] = useState('')
   const [erroApi, setErroApi] = useState(null)
   const [barras, setBarras] = useState(() => Array(BARRAS).fill(0.1))
   const [tvTexto, setTvTexto] = useState('Ouvindo...')
+  const progressoRef = useRef(null)
 
   useEffect(() => {
     if (estado !== 'gravando') { setBarras(Array(BARRAS).fill(0.1)); return }
@@ -48,20 +59,61 @@ export default function Home() {
 
   useEffect(() => { if (estado === 'idle') { resetar(); setResultado(null) } }, [tipo])
 
+  function iniciarProgressoSimulado() {
+    let faseIdx = 0
+    let progressoAtual = 0
+
+    function avancarFase() {
+      if (faseIdx >= FASES_PROGRESSO.length) return
+      const fase = FASES_PROGRESSO[faseIdx]
+      setProgressoLabel(fase.label)
+
+      const diff = fase.ate - progressoAtual
+      const passos = 20
+      const intervalo = fase.duracao / passos
+      let passo = 0
+
+      const id = setInterval(() => {
+        passo++
+        const novo = progressoAtual + (diff * passo / passos)
+        setProgresso(Math.min(novo, fase.ate))
+        if (passo >= passos) {
+          clearInterval(id)
+          progressoAtual = fase.ate
+          faseIdx++
+          avancarFase()
+        }
+      }, intervalo)
+
+      progressoRef.current = id
+    }
+
+    avancarFase()
+  }
+
   async function handleParar() {
     const blob = await pararGravacao()
     if (!blob) return
     try {
       setErroApi(null)
-      const data = await processarAudio(blob, tipo, setProgresso)
-      setResultado(data); setEstado('pronto')
+      setProgresso(0)
+      iniciarProgressoSimulado()
+      const data = await processarAudio(blob, tipo, () => { })
+      clearInterval(progressoRef.current)
+      setProgresso(100)
+      setProgressoLabel('Finalizado!')
+      setTimeout(() => { setResultado(data); setEstado('pronto') }, 400)
     } catch (err) {
+      clearInterval(progressoRef.current)
       setErroApi(err.response?.data?.erro || 'Erro ao processar o áudio.')
       setEstado('erro')
     }
   }
 
-  function handleNova() { resetar(); setResultado(null); setProgresso(0); setErroApi(null) }
+  function handleNova() {
+    clearInterval(progressoRef.current)
+    resetar(); setResultado(null); setProgresso(0); setErroApi(null); setProgressoLabel('')
+  }
 
   const emGravacao = estado === 'gravando' || estado === 'pausado'
 
@@ -96,7 +148,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-full max-w-7xl mx-auto">
+    <div className="flex flex-col h-full max-w-7xl mx-auto pb-10">
 
       <div className="px-6 py-6 md:px-10 md:py-8 border-b border-brd bg-bg-card md:bg-transparent">
         <div className="mb-3"><TipoBadge /></div>
@@ -104,7 +156,7 @@ export default function Home() {
           {estado === 'idle' ? 'Pronto para gravar' :
             estado === 'gravando' ? 'Gravando...' :
               estado === 'pausado' ? 'Pausado' :
-                estado === 'processando' ? 'Processando...' : 'Ocorreu um erro'}
+                estado === 'processando' ? 'Gerando ATA...' : 'Ocorreu um erro'}
         </h1>
         <p className="text-sm md:text-base text-tx-ter mt-1.5 font-medium capitalize">
           {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -116,33 +168,44 @@ export default function Home() {
         <div className="flex-1 p-6 md:p-10 flex flex-col gap-6">
 
           <div className="flex-1 bg-bg-card border border-brd rounded-2xl p-6 md:p-8 flex flex-col gap-5 shadow-sm min-h-[220px]">
-            <div className="flex items-center justify-center gap-[4px] fill-current flex-1">
-              {barras.map((h, i) => (
-                <div key={i} className="w-[4px] min-h-[4px] rounded-[2px]" style={{
-                  height: `${h * 100}%`,
-                  background: estado === 'gravando' ? 'var(--color-accent)' : '#cec9c5',
-                  opacity: estado === 'gravando' ? 0.5 + h * 0.5 : 0.2,
-                  transition: estado === 'gravando' ? 'height 0.08s ease' : 'all 0.4s ease',
-                }} />
-              ))}
-            </div>
+            {estado === 'processando' ? (
 
-            {emGravacao && (
-              <div className="flex items-center gap-2.5 bg-bg-page border border-brd rounded-xl py-3 px-5 mx-auto lg:mx-0 w-fit shadow-inner">
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${estado === 'pausado' ? 'bg-[#b87320]' : 'bg-accent'}`} style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
-                <span className="text-base text-tx-sec italic font-medium">
-                  {estado === 'pausado' ? 'Gravação pausada' : tvTexto}
-                </span>
-                {estado === 'gravando' && (
-                  <span className="w-[2px] h-[16px] bg-accent rounded-[1px]" style={{ animation: 'blink 1s step-end infinite' }} />
-                )}
+              /* Componente Wave em ação */
+              <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
+                <Wave />
               </div>
+
+            ) : (
+              <>
+                <div className="flex items-center justify-center gap-[4px] fill-current flex-1">
+                  {barras.map((h, i) => (
+                    <div key={i} className="w-[4px] min-h-[4px] rounded-[2px]" style={{
+                      height: `${h * 100}%`,
+                      background: estado === 'gravando' ? 'var(--color-accent)' : '#cec9c5',
+                      opacity: estado === 'gravando' ? 0.5 + h * 0.5 : 0.2,
+                      transition: estado === 'gravando' ? 'height 0.08s ease' : 'all 0.4s ease',
+                    }} />
+                  ))}
+                </div>
+
+                {emGravacao && (
+                  <div className="flex items-center gap-2.5 bg-bg-page border border-brd rounded-xl py-3 px-5 mx-auto lg:mx-0 w-fit shadow-inner">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${estado === 'pausado' ? 'bg-[#b87320]' : 'bg-accent'}`} style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
+                    <span className="text-base text-tx-sec italic font-medium">
+                      {estado === 'pausado' ? 'Gravação pausada' : tvTexto}
+                    </span>
+                    {estado === 'gravando' && (
+                      <span className="w-[2px] h-[16px] bg-accent rounded-[1px]" style={{ animation: 'blink 1s step-end infinite' }} />
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {emGravacao && (
-            <div className="flex items-center gap-4 justify-center lg:justify-start">
-              <span className="font-mono text-5xl md:text-7xl font-light text-tx-main tracking-tighter leading-none">
+            <div className="flex items-center gap-4 justify-center lg:justify-start pt-2">
+              <span className="font-mono text-6xl md:text-7xl font-light text-tx-main tracking-tighter leading-none">
                 {tempoGravacao}
               </span>
               {estado === 'pausado' && (
@@ -154,7 +217,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="w-full lg:w-[360px] shrink-0 p-6 md:p-10 flex flex-col justify-center gap-6">
+        <div className="w-full lg:w-[380px] shrink-0 p-6 md:p-10 flex flex-col justify-center gap-6 pt-10 lg:pt-0">
 
           {estado === 'idle' && (
             <>
@@ -169,8 +232,8 @@ export default function Home() {
           )}
 
           {emGravacao && (
-            <div className="flex flex-col gap-5">
-              <p className="text-sm md:text-base text-tx-sec leading-relaxed bg-bg-card border border-brd border-l-4 border-l-[#f0a0bc] rounded-xl py-4 px-5 shadow-sm">
+            <div className="flex flex-col gap-6 bg-bg-card border border-brd rounded-2xl p-6 shadow-sm">
+              <p className="text-sm md:text-base text-tx-sec leading-relaxed bg-bg-page border border-brd border-l-4 border-l-[#f0a0bc] rounded-xl py-4 px-5 shadow-inner">
                 {estado === 'gravando'
                   ? 'Pausar não encerra a gravação — use para pequenas pausas.'
                   : 'Gravação pausada. Retome quando quiser ou finalize para gerar a ATA.'}
@@ -194,22 +257,34 @@ export default function Home() {
                 </button>
               </div>
 
-              <button onClick={handleNova} className="bg-transparent border-none text-tx-ter hover:text-tx-sec text-base text-center lg:text-left pt-2 transition-colors">
+              <button onClick={handleNova} className="bg-transparent border-none text-tx-ter hover:text-tx-sec font-medium text-sm md:text-base text-center lg:text-left pt-2 transition-colors">
                 Cancelar gravação
               </button>
             </div>
           )}
 
           {estado === 'processando' && (
-            <div className="flex flex-col gap-3.5 bg-bg-card border border-brd rounded-xl p-5 shadow-sm">
-              <div className="w-full h-[4px] bg-brd rounded-full overflow-hidden">
+            <div className="flex flex-col gap-6 bg-bg-card border border-brd rounded-2xl p-6 shadow-sm relative overflow-hidden">
+
+              <div className="flex items-end justify-between">
+                <span className="text-base font-bold text-tx-main animate-pulse">Processando...</span>
+                <span className="text-sm font-mono text-accent font-semibold">{Math.round(progresso)}%</span>
+              </div>
+
+              <div className="w-full h-[6px] bg-bg-page border border-brd rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-accent rounded-full min-w-[8px] transition-all duration-300 ease-out"
-                  style={{ width: progresso < 100 ? `${progresso}%` : '100%' }}
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{
+                    width: `${progresso}%`,
+                    background: 'linear-gradient(to right, #d4457a, #a855f7, #6366f1)',
+                    boxShadow: '0 0 8px rgba(212,69,122,0.4)',
+                    minWidth: progresso > 0 ? '8px' : '0',
+                  }}
                 />
               </div>
-              <p className="text-base font-medium text-tx-sec text-center lg:text-left">
-                {progresso < 100 ? `Enviando áudio... ${progresso}%` : 'Gerando ATA com LLaMA...'}
+
+              <p className="text-sm font-medium text-tx-sec bg-bg-page p-3 rounded-lg border border-brd shadow-inner italic">
+                {progressoLabel}
               </p>
             </div>
           )}
